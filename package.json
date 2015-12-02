@@ -1,0 +1,16 @@
+{
+  "title": "Asbook Downloader",
+  "name": "asbookdl",
+  "version": "0.0.1",
+  "description": "Add-on to fast download books from asbook.net",
+  "main": "index.js",
+  "author": "Andrej Kostrov",
+  "engines": {
+    "firefox": ">=38.0a1",
+    "fennec": ">=38.0a1"
+  },
+  "license": "MIT",
+  "keywords": [
+    "jetpack"
+  ]
+}
