@@ -31,11 +31,6 @@ function startListen(worker){
     worker.port.on("DownloadBook",function(worker_data){ onDownloadBook(worker_data,worker)});
 }
 
-var fpath = "";
-var urls = new Array();
-var urls_cnt=0;
-var progress=0;
-
 function onDownloadBook({title,playlist_url,cover_url},worker){
 	var nsIFilePicker = Ci.nsIFilePicker;
 	var fp = Cc["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
@@ -45,13 +40,13 @@ function onDownloadBook({title,playlist_url,cover_url},worker){
 	fp.init(window, "Select a target directory", nsIFilePicker.modeGetFolder);
 	var retval = fp.show();
 	if (retval == nsIFilePicker.returnOK || retval == nsIFilePicker.returnReplace){
-		fpath = OS.Path.join(fp.file.path,title);
+		worker.fpath = OS.Path.join(fp.file.path,title);
 	}else{
 		return;
 	}
-	OS.File.makeDir(fpath).then( function(){ 
-		urls = new Array();
-		urls.push(cover_url);
+	OS.File.makeDir(worker.fpath).then( function(){ 
+		worker.urls = new Array();
+		worker.urls.push(cover_url);
 		downloadPlayList(playlist_url,worker);
 	}, function(){worker.port.emit("Message", "makeDir failed")} );
 	worker.port.emit("Progress",{value:0,max:1});
@@ -67,14 +62,14 @@ function downloadPlayList(playlist_url,worker){
 }
 
 function onPlaylistDownloaded(playlistContent,worker){
-    JSON.parse(playlistContent.text, function(k,v){if (k=="file")urls.push(v)});
-	urls_cnt = urls.length;
-	progress= 0;
-	DownloadFiles(urls,worker);
+    JSON.parse(playlistContent.text, function(k,v){if (k=="file")worker.urls.push(v)});
+	worker.urls_cnt = worker.urls.length;
+	worker.progress = 0;
+	DownloadFiles(worker);
 }
 
-function DownloadFiles(urls,worker){
-    var url = urls.splice(0,1)[0];
+function DownloadFiles(worker){
+    var url = worker.urls.splice(0,1)[0];
 	var fname_match = url.match(/\d+.mp3/);
 	var fname;
 	if (fname_match == null){ // cover	
@@ -82,15 +77,15 @@ function DownloadFiles(urls,worker){
 	}else{
 		fname = fname_match[0];
 	}
-    mytarget_path = OS.Path.join(fpath, fname);	
-	progress++;
+    mytarget_path = OS.Path.join(worker.fpath, fname);	
+	worker.progress++;
 	Task.spawn(function(){ yield Downloads.fetch(url,mytarget_path); }).then(
 		function(){
-			worker.port.emit("Progress",{value:progress,max:urls_cnt});
-			if (urls.length!=0){
-				DownloadFiles(urls,worker);
+			worker.port.emit("Progress",{value:worker.progress,max:worker.urls_cnt});
+			if (worker.urls.length!=0){
+				DownloadFiles(worker);
 			} else {
-				worker.port.emit("Progress",{value:-1,max:urls_cnt});
+				worker.port.emit("Progress",{value:-1,max:worker.urls_cnt});
 			}
 		},
 		function(downloadError){
