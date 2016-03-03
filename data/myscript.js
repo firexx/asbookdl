@@ -37,7 +37,7 @@ function pllink(){
     if (typeof(fl_var) != "undefined" ){
 		cover_url = document.getElementsByClassName("b-searchpost__cover_image")[0].getAttribute("src");
         maintitle = document.getElementsByClassName("b-maintitle")[0].innerHTML;
-        maintitle = maintitle.replace('"',"'").replace('"',"'").trim();
+        maintitle = maintitle.replace(/\"/g,"'").replace(/\?/g,".").replace(/:/g,"-").trim();
         playlist_url = fl_var.value.split('&')[1].split('=')[1];
         
 		var download_button= document.createElement("input");
