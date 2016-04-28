@@ -76,6 +76,8 @@ function DownloadFiles(worker){
 		fname = "cover.jpg";
 	}else{
 		fname = fname_match[0];
+                while (fname.length<8)
+                    fname="0"+fname;
 	}
     mytarget_path = OS.Path.join(worker.fpath, fname);	
 	worker.progress++;
